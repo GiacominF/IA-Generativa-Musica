@@ -34,7 +34,27 @@ minha_gramatica: Gramatica = {
     ],
     
     "FRASE_3": [
-        (["COMPASSO_V", "COMPASSO_IV", "COMPASSO_I", "COMPASSO_I"], 1)
+        (["COMPASSO_V", "COMPASSO_IV", "COMPASSO_I", "TURN_AROUND"], 1)
+    ],
+    
+    "COMPASSO_I" : [
+        (["MOTIVO_I_BASE"], 0,4),
+        (["MOTIVO_I_ARPEJO"], 0,3),
+        (["MOTIVO_I_RESPOSTA", "PAUSA_CURTA"], 0,3)
+    ],
+    
+    "COMPASSO_IV" : [
+        (["LICK_BLUES_IV"], 0,7),
+        (["MOTIVO_TENSAO_IV"], 0,3)
+    ],
+    
+    "COMPASSO_V" : [
+        (["MOTIVO_CLIMAX_V"], 1)
+    ],
+
+    "TURN_AROUND" : [
+        (["LICK_TURN_AROUND_1"], 0,5),
+        (["LICK_TURN_AROUND_2"], 0,5)
     ],
 
 }
