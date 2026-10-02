@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Dict, Tuple
+import random
 
 #Definição da estrutura da nota
 @dataclass
@@ -86,11 +87,11 @@ minha_gramatica: Gramatica = {
         (["NOTA_CURTA_V", "NOTA_CURTA_V", "NOTA_CURTA_V", "NOTA_CURTA_V", "NOTA_CURTA_V", "NOTA_CURTA_V", "NOTA_MEDIA_V"], 1.0)
     ],
     
-    "LICK_TURNAROUND_1": [
+    "LICK_TURN_AROUND_1": [
         (["NOTA_CURTA_I", "NOTA_CURTA_IV", "NOTA_CURTA_V", "NOTA_CURTA_I", "NOTA_LONGA_I"], 1.0)
     ],
 
-    "LICK_TURNAROUND_2": [
+    "LICK_TURN_AROUND_2": [
         (["NOTA_MEDIA_V", "NOTA_MEDIA_V", "NOTA_LONGA_I"], 1.0)
     ]
 }
@@ -109,3 +110,34 @@ ESCALAS_BLUES = {
     "IV": [65, 68, 70, 71, 72, 75],  # Fá, Láb, Sib, Si, Dó, Mib
     "V":  [67, 70, 72, 73, 74, 77]   # Sol, Sib, Dó, Dó#, Ré, Fá
 }
+
+#Expansão do axioma até os nós terminais
+def gerar_terminais(simbolo: str, gramatica: dict) -> List[str]:
+        """
+        Expande recursivamente um símbolo através da gramática probabilística.
+        
+        :param simbolo: Símbolo atual a ser expandido (ex.: "BLUES", "COMPASSO_I", etc.)
+        :param gramatica: Dicionário contendo as regras de produção e probabilidades
+        :param temperatura: Hiperparâmetro que controla a aleatoriedade das escolhas
+        :return: Lista linear de símbolos puramente terminais
+        """
+        #Se o símbolo não está nas regras, é terminal
+        if simbolo not in gramatica:
+            return [simbolo]
+        
+        #Obter as produções possíveis para o símbolo não-terminal (Lista de tuplas)
+        producoes = gramatica[simbolo]
+        
+        opcoes = [regra for regra, _ in producoes]
+        pesos = [peso for _, peso in producoes]
+        
+        #Sorteio probabilístico
+        sorteio = random.choices(opcoes, weights=pesos, k=1) #Retorna lista sorteada
+        lista_escolhida = sorteio[0]
+        
+        #Expandir cada símbolo da lista escolhida
+        resultado_final: List[str] = []
+        for sub_simbolo in lista_escolhida:
+            resultado_final.extend(gerar_terminais(sub_simbolo, gramatica))
+            
+        return resultado_final
