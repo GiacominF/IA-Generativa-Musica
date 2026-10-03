@@ -3,6 +3,8 @@ from typing import List, Dict, Tuple
 import random
 import mido
 from mido import Message, MidiFile, MidiTrack, MetaMessage
+import numpy as np
+from scipy.io import wavfile
 
 #Definição da estrutura da nota
 @dataclass
@@ -242,3 +244,90 @@ def salvar_midi(notas: List[Nota], caminho_arquivo: str, bpm: int = 120) -> None
     
         mid.save(caminho_arquivo)
         print(f"-> Arquivo MIDI salvo em: {caminho_arquivo}")
+
+
+def sintetizar_wav(notas: List[Nota], caminho_arquivo: str, bpm: int = 120, samplerate: int = 44100) -> None:
+    """
+    Sintetiza a lista de notas em um arquivo de áudio PCM WAV (.wav) puro.
+    Utiliza síntese aditiva com harmônicos e envelope de amplitude para evitar estalos (clicks).
+    """
+    segundos_por_batida = 60.0 / bpm
+    segmentos_de_audio = []
+
+    for nota in notas:
+        duracao_segundos = nota.duracao * segundos_por_batida
+        num_amostras = int(samplerate * duracao_segundos)
+        
+        if num_amostras <= 0:
+            continue
+            
+        t = np.linspace(0, duracao_segundos, num_amostras, endpoint=False)
+
+        if nota.pitch == 0:
+            #Pausa: silêncio absoluto
+            onda = np.zeros(num_amostras)
+        else:
+            #Frequência fundamental da nota em Hz: f = 440 * 2^((pitch - 69)/12)
+            freq = 440.0 * (2.0 ** ((nota.pitch - 69) / 12.0))
+            
+            #Síntese aditiva: fundamental + harmônicos suaves para timbre expressivo
+            onda = (
+                0.60 * np.sin(2 * np.pi * freq * t) +
+                0.25 * np.sin(2 * np.pi * 2 * freq * t) +
+                0.15 * np.sin(2 * np.pi * 3 * freq * t)
+            )
+            
+            #Envelope de amplitude para suavizar o ataque e o release
+            fade_len = min(int(samplerate * 0.02), num_amostras // 4)
+            if fade_len > 0:
+                envelope = np.ones(num_amostras)
+                envelope[:fade_len] = np.linspace(0, 1, fade_len)
+                envelope[-fade_len:] = np.linspace(1, 0, fade_len)
+                onda *= envelope
+
+        segmentos_de_audio.append(onda)
+
+    if not segmentos_de_audio:
+        return
+
+    #Concatenação e normalização do sinal para 16-bit PCM
+    audio_completo = np.concatenate(segmentos_de_audio)
+    pico = np.max(np.abs(audio_completo))
+    if pico > 0:
+        audio_normalizado = audio_completo / pico
+    else:
+        audio_normalizado = audio_completo
+
+    audio_int16 = (audio_normalizado * 32767).astype(np.int16)
+    wavfile.write(caminho_arquivo, samplerate, audio_int16)
+    print(f"-> Arquivo Áudio WAV salvo em: {caminho_arquivo}")
+
+
+if __name__ == "__main__":
+    
+    experimentos = [
+        {"nome": "musica_1_melodica", "bias": 3.0, "bpm": 110, "seed": 42},    #Condução melódica suave e fluida
+        {"nome": "musica_2_equilibrada", "bias": 1.5, "bpm": 120, "seed": 105}, #Condução com licks e saltos moderados
+        {"nome": "musica_3_expressiva", "bias": 0.8, "bpm": 130, "seed": 999}  #Condução mais angular e andamento rápido
+    ]
+    
+    for exp in experimentos:
+        random.seed(exp["seed"])
+        print(f"\n--- Gerando {exp['nome']} (Bias: {exp['bias']}, BPM: {exp['bpm']}, Seed: {exp['seed']}) ---")
+        
+        #Expansão gramatical probabilística a partir do axioma
+        terminais = gerar_terminais("BLUES", minha_gramatica)
+        
+        #Conversão dos terminais para notas reais com condução melódica
+        notas = converter_terminais_para_notas(terminais, step_bias=exp["bias"])
+        
+        #Exportação simbólica (.mid) e em áudio (.wav)
+        arq_mid = f"{exp['nome']}.mid"
+        arq_wav = f"{exp['nome']}.wav"
+        
+        salvar_midi(notas, arq_mid, bpm=exp["bpm"])
+        sintetizar_wav(notas, arq_wav, bpm=exp["bpm"])
+        
+        dur_batidas = sum(n.duracao for n in notas)
+        print(f"Concluído: {len(notas)} eventos gerados ({dur_batidas} batidas, 3 choruses).")
+
