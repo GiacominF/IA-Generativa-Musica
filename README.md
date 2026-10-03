@@ -65,6 +65,6 @@ Link para a conversa:
 https://share.gemini.google/NpU5b01fOaFr
 
 IA Utilizada para entender melhor conceitos e jargões musicais específicos; Para definir os trade-offs entre os três possíveis
-métodos apresentados na especificação do trabalho, culminando na escolha das gramáticas generativas; e para detalhes de implementação de sintaxe e também das bibliotecas de processamento áudio.
+métodos apresentados na especificação do trabalho, culminando na escolha das gramáticas generativas; e para detalhes de implementação de sintaxe e também das bibliotecas de processamento áudio. Além disso, para auxílio na construção da documentação ISMIR, ajudando na linguagem LateX, formatando algumas partes do documento, e nas explicações mais técnicas, também corrigindo sintaxe da língua inglesa.
 
 ---
